@@ -9,7 +9,9 @@ import { UnrealBloomPass } from "/node_modules/three/examples/jsm/postprocessing
 import { EffectComposer } from "/node_modules/three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "/node_modules/three/examples/jsm/postprocessing/RenderPass.js";
 
+const orbitColor = new THREE.Color(0x808080);
 const areOrbitsShown = ref(true);
+const orbitSpeedAmplify = ref(1);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -22,7 +24,7 @@ const camera = new THREE.PerspectiveCamera(
 // Renderer to render our scene
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 
-const orbitColor = new THREE.Color(0x808080);
+camera.position.y = 30;
 
 // Orbit controls for camera movement
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -47,12 +49,6 @@ function init() {
 }
 
 init();
-
-// const size = 100;
-// const divisions = 100;
-
-// const gridHelper = new THREE.GridHelper(size, divisions);
-// scene.add(gridHelper);
 
 const sunLight = new THREE.PointLight(0xffffff, 1, 0, 0.01);
 sunLight.position.set(0, 0, 0);
@@ -162,7 +158,7 @@ const moonOrbitLine = new THREE.Line(
 
 scene.add(moonMesh);
 
-moonOrbitLine.rotation.x = (95.1 * Math.PI) / 180;
+moonOrbitLine.rotation.x = (85.1 * Math.PI) / 180;
 earthGroup.add(moonOrbitLine);
 
 // Mars
@@ -304,6 +300,7 @@ const saturnRingMaterial = new THREE.MeshLambertMaterial({
   map: loader.load("/textures/saturn_rings.png"),
   side: THREE.DoubleSide,
   transparent: true,
+  opacity: 0.8,
 });
 
 const saturnRings = new THREE.Mesh(saturnRingGeometry, saturnRingMaterial);
@@ -381,7 +378,7 @@ const spaceMaterial = new THREE.MeshBasicMaterial({
   map: loader.load("/textures/2k_stars.jpg"),
   side: THREE.BackSide,
   transparent: true,
-  opacity: 0.1,
+  opacity: 0.4,
   // wireframe: true,
   // color: "red",
 });
@@ -406,7 +403,7 @@ const neptuneVector = new THREE.Vector3();
 const clock = new THREE.Clock();
 
 const orbitPlanet = (planet, orbitGeo, orbitLine, vector, speed, t) => {
-  t = (t * speed) % 1;
+  t = (t * speed * orbitSpeedAmplify.value) % 1;
 
   orbitGeo.getPointAt(t, vector);
   planet.position.copy(vector);
@@ -416,7 +413,7 @@ const orbitPlanet = (planet, orbitGeo, orbitLine, vector, speed, t) => {
 const toggleOrbits = () => {
   areOrbitsShown.value = !areOrbitsShown.value;
 
-  // Toggle each planet visibility
+  // Toggle each planet's orbit visibility
   mercuryOrbitLine.visible = areOrbitsShown.value;
   venusOrbitLine.visible = areOrbitsShown.value;
   earthOrbitLine.visible = areOrbitsShown.value;
@@ -427,6 +424,21 @@ const toggleOrbits = () => {
   uranusOrbitLine.visible = areOrbitsShown.value;
   neptuneOrbitLine.visible = areOrbitsShown.value;
 };
+
+renderer.shadowMap.enabled = true;
+sunLight.castShadow = true;
+
+sunLight.shadow.mapSize.width = 8192;
+sunLight.shadow.mapSize.height = 8192;
+sunLight.shadow.camera.near = 10;
+sunLight.shadow.camera.far = 350;
+
+earthMesh.castShadow = true;
+earthMesh.receiveShadow = true;
+earthCloudsMesh.receiveShadow = true;
+
+moonMesh.castShadow = true;
+moonMesh.receiveShadow = true;
 
 // Animation function that updates every frame our scene
 function animate() {
@@ -444,7 +456,7 @@ function animate() {
     t
   );
 
-  mercuryMesh.rotation.y += 0.001;
+  mercuryMesh.rotation.y += 0.001 * orbitSpeedAmplify.value;
 
   // Venus orbit around sun
   orbitPlanet(
@@ -456,8 +468,8 @@ function animate() {
     t
   );
 
-  venusMesh.rotation.y -= 0.001;
-  venusAtmosphere.rotation.y -= 0.002;
+  venusMesh.rotation.y -= 0.001 * orbitSpeedAmplify.value;
+  venusAtmosphere.rotation.y -= 0.002 * orbitSpeedAmplify.value;
 
   // Earth's orbit around sun
   orbitPlanet(
@@ -470,13 +482,13 @@ function animate() {
   );
 
   // Earth's rotation and Earth's atmosphere
-  earthCloudsMesh.rotation.y += 0.0001;
-  earthGroup.rotation.y += 0.0001;
+  earthCloudsMesh.rotation.y += 0.001 * orbitSpeedAmplify.value;
+  earthGroup.rotation.y += 0.0015 * orbitSpeedAmplify.value;
 
   // Moon's orbit around earth
   orbitPlanet(moonMesh, moonOrbitGeometry, moonOrbitLine, moonVector, 0.019, t);
 
-  moonMesh.rotation.y += 0.0014;
+  moonMesh.rotation.y += 0.0014 * orbitSpeedAmplify.value;
 
   // Mars orbit around sun
   orbitPlanet(
@@ -488,7 +500,7 @@ function animate() {
     t
   );
 
-  marsMesh.rotation.y += 0.0001;
+  marsMesh.rotation.y += 0.0001 * orbitSpeedAmplify.value;
 
   // Jupiter orbit around sun
   orbitPlanet(
@@ -500,7 +512,7 @@ function animate() {
     t
   );
 
-  jupiterMesh.rotation.y += 0.001;
+  jupiterMesh.rotation.y += 0.001 * orbitSpeedAmplify.value;
 
   // Saturn orbit around sun
   orbitPlanet(
@@ -512,7 +524,7 @@ function animate() {
     t
   );
 
-  saturnGroup.rotation.y += 0.001;
+  saturnGroup.rotation.y += 0.001 * orbitSpeedAmplify.value;
 
   // Uranus orbit around sun
 
@@ -525,7 +537,7 @@ function animate() {
     t
   );
 
-  uranusMesh.rotation.y += 0.001;
+  uranusMesh.rotation.y += 0.001 * orbitSpeedAmplify.value;
 
   // Neptune orbit around sun
 
@@ -538,7 +550,7 @@ function animate() {
     t
   );
 
-  neptuneMesh.rotation.y += 0.0001;
+  neptuneMesh.rotation.y += 0.0001 * orbitSpeedAmplify.value;
 
   // Getting current position of selected object and target camera on it
   currentObject.getWorldPosition(controls.target);
@@ -552,6 +564,11 @@ function animate() {
 }
 
 animate();
+
+// Modify orbit speed from slider
+const changeOrbitSpeed = (event) => {
+  orbitSpeedAmplify.value = event;
+};
 
 // Focuses camera on selected object
 const focusObject = (object, min, max) => {
@@ -589,7 +606,7 @@ window.addEventListener("resize", handleWindowResize, false);
     <my-planet @click="focusObject(uranusMesh, 5, 35)" text="Uranus" />
     <my-planet @click="focusObject(neptuneMesh, 5, 35)" text="Neptune" />
   </div>
-  <my-side-bar :orbits="toggleOrbits" />
+  <my-side-bar :orbits="toggleOrbits" @orbitSpeed="changeOrbitSpeed" />
   <router-link
     to="/"
     @click="reset()"
