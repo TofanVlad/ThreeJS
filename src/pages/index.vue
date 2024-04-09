@@ -10,6 +10,7 @@ import myButton from "../components/my-button.vue";
       <my-button text="Cubes" to="/animated-cubes" />
       <my-button text="Shapes" to="/shapes" />
       <my-button text="Solar system" to="/solar-system" />
+      <my-button text="Globe" to="/globe" />
     </div>
   </section>
   <my-bubbles />

@@ -403,7 +403,7 @@ const neptuneVector = new THREE.Vector3();
 const clock = new THREE.Clock();
 
 const orbitPlanet = (planet, orbitGeo, orbitLine, vector, speed, t) => {
-  t = (t * speed * orbitSpeedAmplify.value) % 1;
+  t = ((t * speed) % 1) * orbitSpeedAmplify.value;
 
   orbitGeo.getPointAt(t, vector);
   planet.position.copy(vector);
