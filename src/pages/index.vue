@@ -11,6 +11,7 @@ import myButton from "../components/my-button.vue";
       <my-button text="Shapes" to="/shapes" />
       <my-button text="Solar system" to="/solar-system" />
       <my-button text="Globe" to="/globe" />
+      <my-button text="Caps" to="/caps" />
     </div>
   </section>
   <my-bubbles />
