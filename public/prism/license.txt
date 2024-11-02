@@ -1,0 +1,11 @@
+Model Information:
+* title:	Reflection/Refraction Prism
+* source:	https://sketchfab.com/3d-models/reflectionrefraction-prism-8f3a8a2168ed4a47ac8328e24e88147b
+* author:	Jackmcm (https://sketchfab.com/Jackmcm)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Reflection/Refraction Prism" (https://sketchfab.com/3d-models/reflectionrefraction-prism-8f3a8a2168ed4a47ac8328e24e88147b) by Jackmcm (https://sketchfab.com/Jackmcm) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
