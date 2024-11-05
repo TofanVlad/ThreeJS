@@ -2,6 +2,7 @@
 import { onMounted, ref, Ref } from "vue";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
+import { fragment, vertex } from "../shaders/arhiterra";
 
 const canvas: Ref<HTMLCanvasElement | null> = ref(null);
 
@@ -61,7 +62,18 @@ function initArhiterra(canvas: HTMLCanvasElement) {
   topGeometry.computeVertexNormals();
   topGeometry.rotateY(Math.PI / 4);
 
-  const lineMaterial = new THREE.LineBasicMaterial({ color: "white" });
+  const lineMaterial = new THREE.ShaderMaterial({
+    fragmentShader: fragment,
+    vertexShader: vertex,
+    uniforms: {
+      u_tick: {
+        value: 1.0,
+      },
+      u_resolution: {
+        value: new THREE.Vector2(window.innerWidth, window.innerHeight),
+      },
+    },
+  });
 
   const edgeTop = new THREE.EdgesGeometry(topGeometry);
   const lineTop = new THREE.LineSegments(edgeTop, lineMaterial);
@@ -79,6 +91,17 @@ function initArhiterra(canvas: HTMLCanvasElement) {
   lineMiddle.scale.set(4, 1, 4);
   linebottom.scale.set(4, 1, 4);
 
+  const top = new THREE.Mesh(topGeometry, lineMaterial);
+  const mid = new THREE.Mesh(geometryMiddle, lineMaterial);
+  const bot = new THREE.Mesh(geometryBottom, lineMaterial);
+
+  top.position.y = 1.45;
+  top.scale.set(3, 0.9, 3);
+  bot.position.y = -1;
+  bot.scale.set(4, 1, 4);
+  mid.position.y = 0.25;
+  mid.scale.set(4, 1, 4);
+
   const group = new THREE.Group();
   group.add(lineTop, lineMiddle, linebottom);
 
@@ -86,11 +109,13 @@ function initArhiterra(canvas: HTMLCanvasElement) {
 
   camera.lookAt(group.position);
 
-  function tick() {
+  function tick(t = 0) {
     controls.update();
 
     requestAnimationFrame(tick);
     renderer.render(scene, camera);
+    top.material.uniforms.u_tick.value = Math.sin(t * 0.0001);
+
     // group.rotateY(t * 0.00000001);
   }
 
