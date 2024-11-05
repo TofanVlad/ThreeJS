@@ -173,9 +173,3 @@ onMounted(() => {
   >
   <canvas ref="canvas" class="w-screen h-screen"></canvas>
 </template>
-
-<style scoped>
-canvas:hover {
-  cursor: grab;
-}
-</style>

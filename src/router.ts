@@ -8,6 +8,7 @@ const routes = [
     { path: '/globe', component: () => import('./pages/Globe.vue') },
     { path: '/caps', component: () => import('./pages/Caps.vue') },
     { path: '/prism', component: () => import('./pages/Prism.vue') },
+    { path: '/Arhiterra', component: () => import('./pages/Arhiterra.vue') },
 ]
 
 const router = createRouter({
