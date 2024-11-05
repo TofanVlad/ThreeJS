@@ -2,7 +2,8 @@
 import { onMounted, ref, Ref } from "vue";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
-import { fragment, vertex } from "../shaders/arhiterra";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { FlakesTexture, RGBELoader } from "three/examples/jsm/Addons.js";
 
 const canvas: Ref<HTMLCanvasElement | null> = ref(null);
 
@@ -16,109 +17,81 @@ function initArhiterra(canvas: HTMLCanvasElement) {
 
   // const camera = new THREE.OrthographicCamera(-6, 6, 6, -6, 0.1, 100);
 
-  camera.position.set(8, 0, 0);
+  camera.position.set(4, 0, 0);
   scene.add(camera);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setClearColor("black");
   renderer.setSize(window.innerWidth, window.innerHeight);
 
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.25;
+
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.listenToKeyEvents(window);
 
-  const spotLight = new THREE.SpotLight("#ffffff", 100);
-  const ambientLight = new THREE.AmbientLight("#ffffff", 5);
-  spotLight.position.set(1, 5, 0);
+  // controls.autoRotate = true;
+  // controls.autoRotateSpeed = 0.5;
+  // controls.enableDamping = true;
+
+  const spotLight = new THREE.SpotLight(
+    "#FFFFFF",
+    150,
+    0,
+    (Math.PI * 30) / 180,
+    1
+  );
+  const ambientLight = new THREE.AmbientLight("#ffffff", 1);
+  spotLight.position.set(1, 3, 0);
   scene.add(spotLight, ambientLight);
 
-  const geometryBottom = new THREE.CylinderGeometry(
-    0.65 / Math.sqrt(2),
-    1 / Math.sqrt(2),
-    1,
-    4,
-    1
-  ).toNonIndexed();
-  geometryBottom.computeVertexNormals();
-  geometryBottom.rotateY(Math.PI / 4);
-  geometryBottom;
+  let metalTexture = new THREE.CanvasTexture(new FlakesTexture());
+  metalTexture.wrapS = THREE.RepeatWrapping;
+  metalTexture.wrapT = THREE.RepeatWrapping;
+  metalTexture.repeat.x = 10;
+  metalTexture.repeat.y = 10;
 
-  const geometryMiddle = new THREE.CylinderGeometry(
-    0.3 / Math.sqrt(2),
-    0.6 / Math.sqrt(2),
-    1,
-    4,
-    1
-  ).toNonIndexed();
-  geometryMiddle.computeVertexNormals();
-  geometryMiddle.rotateY(Math.PI / 4);
+  const loader = new GLTFLoader();
 
-  const topGeometry = new THREE.CylinderGeometry(
-    0 / Math.sqrt(2),
-    0.35 / Math.sqrt(2),
-    1,
-    4,
-    1
-  ).toNonIndexed();
-  topGeometry.computeVertexNormals();
-  topGeometry.rotateY(Math.PI / 4);
+  let envMapLoader = new THREE.PMREMGenerator(renderer);
 
-  const lineMaterial = new THREE.ShaderMaterial({
-    fragmentShader: fragment,
-    vertexShader: vertex,
-    uniforms: {
-      u_tick: {
-        value: 1.0,
-      },
-      u_resolution: {
-        value: new THREE.Vector2(window.innerWidth, window.innerHeight),
-      },
-    },
-  });
+  new RGBELoader()
+    .setPath("/Arhiterra/")
+    .load("small_empty_room_1_4k.hdr", function (hdrmap) {
+      let envmap = envMapLoader.fromCubemap(hdrmap);
 
-  const edgeTop = new THREE.EdgesGeometry(topGeometry);
-  const lineTop = new THREE.LineSegments(edgeTop, lineMaterial);
+      loader.load("/Arhiterra/Arhiterra.glb", function (obj) {
+        obj.scene.traverse((mesh) => {
+          mesh.material = new THREE.MeshStandardMaterial({
+            side: THREE.DoubleSide,
+            color: 0x313131,
+            metalness: 1,
+            roughness: 0.75,
+            normalMap: metalTexture,
+            normalScale: new THREE.Vector2(0.15, 0.15),
+            transparent: false,
+            envMap: envmap.texture,
+          });
+          function animateMesh(t = 0) {
+            mesh.rotateY((Math.PI * t) / 10000000 / 180);
 
-  const edgeMiddle = new THREE.EdgesGeometry(geometryMiddle);
-  const lineMiddle = new THREE.LineSegments(edgeMiddle, lineMaterial);
+            requestAnimationFrame(animateMesh);
+          }
+          animateMesh();
+        });
+        scene.add(obj.scene);
+      });
+    });
 
-  const edgeBottom = new THREE.EdgesGeometry(geometryBottom);
-  const linebottom = new THREE.LineSegments(edgeBottom, lineMaterial);
-
-  linebottom.position.y = -1;
-  lineMiddle.position.y = 0.25;
-  lineTop.scale.set(3, 0.9, 3);
-  lineTop.position.y = 1.45;
-  lineMiddle.scale.set(4, 1, 4);
-  linebottom.scale.set(4, 1, 4);
-
-  const top = new THREE.Mesh(topGeometry, lineMaterial);
-  const mid = new THREE.Mesh(geometryMiddle, lineMaterial);
-  const bot = new THREE.Mesh(geometryBottom, lineMaterial);
-
-  top.position.y = 1.45;
-  top.scale.set(3, 0.9, 3);
-  bot.position.y = -1;
-  bot.scale.set(4, 1, 4);
-  mid.position.y = 0.25;
-  mid.scale.set(4, 1, 4);
-
-  const group = new THREE.Group();
-  group.add(lineTop, lineMiddle, linebottom);
-
-  scene.add(group);
-
-  camera.lookAt(group.position);
-
-  function tick(t = 0) {
+  function tick() {
     controls.update();
 
     requestAnimationFrame(tick);
     renderer.render(scene, camera);
-    top.material.uniforms.u_tick.value = Math.sin(t * 0.0001);
 
     // group.rotateY(t * 0.00000001);
   }
-
   tick();
 
   window.addEventListener("resize", () => {
