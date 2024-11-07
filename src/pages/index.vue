@@ -14,6 +14,7 @@ import myButton from "../components/my-button.vue";
       <my-button text="Caps" to="/caps" />
       <my-button text="Prism" to="/prism" />
       <my-button text="Arhiterra" to="/arhiterra" />
+      <my-button text="Coins" to="/coins" />
     </div>
   </section>
   <my-bubbles />
