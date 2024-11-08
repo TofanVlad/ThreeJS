@@ -3,7 +3,6 @@ import { onMounted, Ref, ref } from "vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import TWEEN from "three/examples/jsm/libs/tween.module";
-import { fragment, vertex } from "../shaders/coins";
 
 const canvas: Ref<HTMLCanvasElement | null> = ref(null);
 
@@ -27,20 +26,29 @@ function initCoins(canvas: HTMLCanvasElement) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.listenToKeyEvents(window);
 
-  const coinGeometry = new THREE.CylinderGeometry(1, 1, 0.2);
-  const coinMaterial = new THREE.ShaderMaterial({
-    vertexShader: vertex,
-    fragmentShader: fragment,
-    uniforms: {
-      u_tick: {
-        value: 1.0,
-      },
-      u_resolution: {
-        value: new THREE.Vector2(w, h),
-      },
-    },
-  });
+  const directionLightTopFront = new THREE.DirectionalLight(0xffffff, 5);
 
+  const directionLightTopRight = new THREE.DirectionalLight(0xffffff, 4);
+
+  const directionLightBack = new THREE.PointLight(0xffffff, 1, 10, 2);
+
+  directionLightTopFront.rotateX((Math.PI * 90) / 180);
+  directionLightTopFront.position.set(-2, -2, 4);
+  directionLightTopFront.rotateZ((Math.PI * 25) / 180);
+  directionLightTopFront.rotateX((Math.PI * 25) / 180);
+
+  directionLightBack.position.set(1, -1.5, -1);
+
+  directionLightTopRight.position.set(4, 4, 0);
+  directionLightTopRight.rotateZ((Math.PI * -45) / 180);
+  scene.add(directionLightTopFront, directionLightBack, directionLightTopRight);
+
+  const coinGeometry = new THREE.CylinderGeometry(1, 1, 0.2);
+  const coinMaterial = new THREE.MeshStandardMaterial({
+    metalness: 1,
+    roughness: 0.1,
+    color: "white",
+  });
   const coinGroup = new THREE.Group();
 
   for (let i = 0; i < 8; i++) {
@@ -50,17 +58,31 @@ function initCoins(canvas: HTMLCanvasElement) {
     mesh.position.set(Math.cos(angle), Math.sin(angle), 0);
     mesh.scale.setScalar(0.35);
 
+    new TWEEN.Tween(mesh.rotation)
+      .to(
+        {
+          x: Math.PI / 180,
+          z: (Math.PI * i * 45) / 180,
+        },
+        7500
+      )
+      .start()
+      .yoyo(true)
+      .repeat(Infinity);
+
     coinGroup.add(mesh);
   }
 
   scene.add(coinGroup);
 
-  function tick(t = 0) {
+  new TWEEN.Tween(coinGroup.rotation)
+    .to({ z: coinGroup.rotation.z + 2 * Math.PI }, 7500)
+    .start()
+    .repeat(Infinity);
+
+  function tick() {
+    TWEEN.update();
     controls.update();
-    coinGroup.children.map((item) => {
-      item.material.uniforms.u_tick.value = Math.sin(t * 0.00025);
-    });
-    coinGroup.rotateZ((Math.PI * t * 0.0000025) / 180);
 
     requestAnimationFrame(tick);
     renderer.render(scene, camera);

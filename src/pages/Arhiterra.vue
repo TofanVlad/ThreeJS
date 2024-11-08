@@ -40,10 +40,11 @@ function initArhiterra(canvas: HTMLCanvasElement) {
     150,
     0,
     (Math.PI * 30) / 180,
-    1
+    0.5,
+    2
   );
   const ambientLight = new THREE.AmbientLight("#ffffff", 1);
-  spotLight.position.set(1, 3, 0);
+  spotLight.position.set(3, 6, 0);
   scene.add(spotLight, ambientLight);
 
   let metalTexture = new THREE.CanvasTexture(new FlakesTexture());
@@ -61,7 +62,7 @@ function initArhiterra(canvas: HTMLCanvasElement) {
     .load("small_empty_room_1_4k.hdr", function (hdrmap) {
       let envmap = envMapLoader.fromCubemap(hdrmap);
 
-      loader.load("/Arhiterra/Arhiterra.glb", function (obj) {
+      loader.load("/Arhiterra/Arhiterra_v2.glb", function (obj) {
         obj.scene.traverse((mesh) => {
           mesh.material = new THREE.MeshStandardMaterial({
             side: THREE.DoubleSide,
