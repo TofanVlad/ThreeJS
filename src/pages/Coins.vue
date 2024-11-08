@@ -26,28 +26,50 @@ function initCoins(canvas: HTMLCanvasElement) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.listenToKeyEvents(window);
 
-  const directionLightTopFront = new THREE.DirectionalLight(0xffffff, 5);
+  //
+  // LIGHNING
+  //
 
-  const directionLightTopRight = new THREE.DirectionalLight(0xffffff, 4);
+  const directLightFront = new THREE.DirectionalLight(0xffffff, 10);
 
-  const directionLightBack = new THREE.PointLight(0xffffff, 1, 10, 2);
+  const directionLightTopFront = new THREE.DirectionalLight(0xffffff, 10);
+
+  const directionLightTopRight = new THREE.DirectionalLight(0xffffff, 10);
+
+  const directionLightBack = new THREE.PointLight(0xffffff, 10);
+
+  directLightFront.position.set(1, 0, 5);
+  directLightFront.rotateX((Math.PI * 75) / 180);
 
   directionLightTopFront.rotateX((Math.PI * 90) / 180);
-  directionLightTopFront.position.set(-2, -2, 4);
-  directionLightTopFront.rotateZ((Math.PI * 25) / 180);
-  directionLightTopFront.rotateX((Math.PI * 25) / 180);
+  directionLightTopFront.position.set(-2, -2, 1);
+  directionLightTopFront.rotateZ((Math.PI * 60) / 180);
+  directionLightTopFront.rotateX((Math.PI * 45) / 180);
 
-  directionLightBack.position.set(1, -1.5, -1);
+  directionLightBack.position.set(0, 0, -2);
+  directionLightBack.rotateX((Math.PI * -90) / 180);
 
   directionLightTopRight.position.set(4, 4, 0);
   directionLightTopRight.rotateZ((Math.PI * -45) / 180);
-  scene.add(directionLightTopFront, directionLightBack, directionLightTopRight);
+  scene.add(
+    directionLightTopFront,
+    directionLightTopFront.target,
+    directionLightBack,
+    directionLightTopRight,
+    directionLightTopRight.target,
+    directLightFront,
+    directLightFront.target
+  );
 
-  const coinGeometry = new THREE.CylinderGeometry(1, 1, 0.2);
+  //
+  // COIN GEOMETRY
+  //
+
+  const coinGeometry = new THREE.CylinderGeometry(1, 1, 0.1);
   const coinMaterial = new THREE.MeshStandardMaterial({
-    metalness: 1,
-    roughness: 0.1,
-    color: "white",
+    metalness: 0.6,
+    roughness: 0.3,
+    color: "black",
   });
   const coinGroup = new THREE.Group();
 
@@ -64,10 +86,9 @@ function initCoins(canvas: HTMLCanvasElement) {
           x: Math.PI / 180,
           z: (Math.PI * i * 45) / 180,
         },
-        7500
+        10000
       )
       .start()
-      .easing(TWEEN.Easing.Quadratic.Out)
       .yoyo(true)
       .repeat(Infinity);
 
@@ -76,8 +97,12 @@ function initCoins(canvas: HTMLCanvasElement) {
 
   scene.add(coinGroup);
 
+  //
+  // COIN GROUP ROTATION
+  //
+
   new TWEEN.Tween(coinGroup.rotation)
-    .to({ z: coinGroup.rotation.z + 2 * Math.PI }, 7500)
+    .to({ z: coinGroup.rotation.z - 2 * Math.PI }, 7500)
     .start()
     .repeat(Infinity);
 
