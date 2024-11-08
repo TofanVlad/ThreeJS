@@ -67,6 +67,7 @@ function initCoins(canvas: HTMLCanvasElement) {
         7500
       )
       .start()
+      .easing(TWEEN.Easing.Quadratic.Out)
       .yoyo(true)
       .repeat(Infinity);
 
