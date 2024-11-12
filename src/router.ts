@@ -10,6 +10,7 @@ const routes = [
     { path: '/prism', component: () => import('./pages/Prism.vue') },
     { path: '/Arhiterra', component: () => import('./pages/Arhiterra.vue') },
     { path: '/coins', component: () => import('./pages/Coins.vue') },
+    { path: '/shaders', component: () => import('./pages/Shaders.vue') },
 ]
 
 const router = createRouter({

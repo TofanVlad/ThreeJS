@@ -15,6 +15,7 @@ import myButton from "../components/my-button.vue";
       <my-button text="Prism" to="/prism" />
       <my-button text="Arhiterra" to="/arhiterra" />
       <my-button text="Coins" to="/coins" />
+      <my-button text="Shaders" to="/shaders" />
     </div>
   </section>
   <my-bubbles />
