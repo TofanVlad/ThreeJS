@@ -15,64 +15,109 @@ function initShaders(canvas: HTMLCanvasElement) {
     window.innerWidth / window.innerHeight
   );
 
-  camera.position.z = 5;
-  camera.position.x = 5;
+  camera.position.set(-1, 4, 8);
   scene.add(camera);
 
-  const renderer = new THREE.WebGLRenderer({ canvas });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.listenToKeyEvents(window);
 
-  const directionLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionLight.position.set(5, 5, 5);
-  scene.add(directionLight, directionLight.target);
+  const directionLight = new THREE.DirectionalLight(0xffffff, 3);
+  directionLight.position.set(2, 10, 2);
+  scene.add(directionLight);
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1);
   scene.add(ambientLight);
 
   const loader = new GLTFLoader();
+  let mixer: THREE.AnimationMixer | null = null;
 
-  loader.load("/Shaders/Foliage.glb", function (obj) {
+  const sceneGroup = new THREE.Group();
+
+  loader.load("/Shaders/Potcoava2.glb", function (obj) {
     obj.scene.traverse((mesh) => {
-      mesh.material = new THREE.ShaderMaterial({
-        vertexShader: vertex,
-        fragmentShader: fragment,
-        side: THREE.DoubleSide,
-        uniforms: {
-          uColorGradient: {
-            value: [
-              new THREE.Color("#427062").convertLinearToSRGB(),
-              new THREE.Color("#33594e").convertLinearToSRGB(),
-              new THREE.Color("#234549").convertLinearToSRGB(),
-              new THREE.Color("#1e363f").convertLinearToSRGB(),
-            ],
+      if (mesh.name === "Foliage") {
+        mesh.material = new THREE.ShaderMaterial({
+          vertexShader: vertex,
+          fragmentShader: fragment,
+          side: THREE.DoubleSide,
+          uniforms: {
+            uColorGradient: {
+              value: [
+                new THREE.Color("#41980a").convertLinearToSRGB(),
+                new THREE.Color("#268b07").convertLinearToSRGB(),
+                new THREE.Color("#117c13").convertLinearToSRGB(),
+                new THREE.Color("#136d15").convertLinearToSRGB(),
+              ],
+            },
+            uBrightnessThresholds: {
+              value: [0.8, 0.3, 0],
+            },
+            uLightPosition: {
+              value: new THREE.Vector3().copy(directionLight.position),
+            },
           },
-          uBrightnessThresholds: {
-            value: [0.85, 0.45, 0.001],
-          },
-          uLightPosition: {
-            value: new THREE.Vector3(15, 15, 15),
-          },
-        },
-      });
+        });
+      }
+      if (mesh.name === "Grass") {
+        mesh.material = new THREE.MeshBasicMaterial({
+          color: "#136d15",
+        });
+      }
+
+      if (mesh.name === "Dirt") {
+        mesh.material = new THREE.MeshBasicMaterial({ color: "#5c463e" });
+      }
     });
-    scene.add(obj.scene);
-    obj.scene.name = "Foliage";
+    sceneGroup.add(obj.scene);
   });
+
+  loader.load("/Shaders/ToonHorse/PotcoavaHorse.glb", function (obj) {
+    obj.scene.traverse((mesh) => {
+      if (mesh.type === "SkinnedMesh") {
+        mesh.material.metalness = 0;
+      }
+    });
+
+    obj.scene.scale.setScalar(1.9);
+    obj.scene.position.y = 0.25;
+    obj.scene.rotation.y = (Math.PI * -45) / 180;
+
+    mixer = new THREE.AnimationMixer(obj.scene);
+    const clips = obj.animations;
+    const clip = THREE.AnimationClip.findByName(clips, "Walk");
+    const action = mixer.clipAction(clip);
+    action.play();
+
+    sceneGroup.add(obj.scene);
+  });
+
+  const rockGeometry = new THREE.TetrahedronGeometry(0.95, 1);
+  const rockMaterial = new THREE.MeshToonMaterial({ color: "#7f8387" });
+
+  const clusterRock1 = new THREE.Mesh(rockGeometry, rockMaterial);
+  const clusterRock2 = new THREE.Mesh(rockGeometry, rockMaterial);
+  const frontRock = new THREE.Mesh(rockGeometry, rockMaterial);
+  frontRock.position.set(-0.5, 0.5, -3);
+  clusterRock1.position.set(2.5, 0, 2.5);
+  clusterRock2.position.set(2.6, 0.25, 2.7);
+  clusterRock2.rotation.y = (Math.PI * 65) / 180;
+  sceneGroup.add(clusterRock1, clusterRock2, frontRock);
+
+  scene.add(sceneGroup);
 
   const clock = new THREE.Clock();
 
   const animate = () => {
     controls.update();
 
-    const foliage = scene.getObjectByName("Foliage");
-    if (foliage) {
-      foliage.scale.x += Math.cos(clock.getElapsedTime()) * 0.001;
-      foliage.scale.y += Math.sin(clock.getElapsedTime()) * 0.0005;
-      foliage.rotation.y += 0.005;
+    if (mixer) {
+      mixer.update(clock.getDelta());
     }
+    sceneGroup.rotation.y += 0.001;
+
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   };
