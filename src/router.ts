@@ -11,6 +11,7 @@ const routes = [
     { path: '/Arhiterra', component: () => import('./pages/Arhiterra.vue') },
     { path: '/coins', component: () => import('./pages/Coins.vue') },
     { path: '/shaders', component: () => import('./pages/Shaders.vue') },
+    { path: '/podcoava-horse', component: () => import('./pages/PodcoavaVerde/Horse.vue') },
 ]
 
 const router = createRouter({

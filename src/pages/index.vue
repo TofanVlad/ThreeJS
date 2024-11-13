@@ -17,6 +17,9 @@ import myButton from "../components/my-button.vue";
       <my-button text="Coins" to="/coins" />
       <my-button text="Shaders" to="/shaders" />
     </div>
+    <div class="flex flex-wrap justify-around gap-4 mt-4">
+      <my-button text="Horse" to="/podcoava-horse" />
+    </div>
   </section>
   <my-bubbles />
 </template>
