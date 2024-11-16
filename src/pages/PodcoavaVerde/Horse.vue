@@ -47,6 +47,7 @@ function initShaders(canvas: HTMLCanvasElement) {
   //
 
   const sceneGroup = new THREE.Group();
+  const grassGroup = new THREE.Group();
 
   //
   // MODEL + ANIMATION LOADER
@@ -94,7 +95,7 @@ function initShaders(canvas: HTMLCanvasElement) {
         mesh.material = new THREE.MeshBasicMaterial({ color: "#5c463e" });
       }
     });
-    sceneGroup.add(obj.scene);
+    grassGroup.add(obj.scene);
   });
 
   //
@@ -131,7 +132,7 @@ function initShaders(canvas: HTMLCanvasElement) {
   //
 
   const rockGeometry = new THREE.TetrahedronGeometry(0.95, 1);
-  const rockMaterial = new THREE.MeshToonMaterial({ color: "#7f8387" });
+  const rockMaterial = new THREE.MeshToonMaterial({ color: "#474747" });
 
   const clusterRock1 = new THREE.Mesh(rockGeometry, rockMaterial);
   const clusterRock2 = new THREE.Mesh(rockGeometry, rockMaterial);
@@ -142,7 +143,7 @@ function initShaders(canvas: HTMLCanvasElement) {
   clusterRock2.rotation.y = (Math.PI * 65) / 180;
   sceneGroup.add(clusterRock1, clusterRock2, frontRock);
 
-  scene.add(sceneGroup);
+  scene.add(sceneGroup, grassGroup);
 
   //
   // ANIMATION
@@ -156,7 +157,7 @@ function initShaders(canvas: HTMLCanvasElement) {
       mixer.update(clock.getDelta() * 0.75);
     }
 
-    sceneGroup.rotation.y += 0.001;
+    grassGroup.rotation.y = Math.sin(clock.getElapsedTime()) * 0.025;
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
