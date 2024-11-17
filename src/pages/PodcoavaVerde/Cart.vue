@@ -21,9 +21,11 @@ function initCart(canvas: HTMLCanvasElement) {
 
   camera.position.set(-1, 4, 8);
   scene.add(camera);
+  scene.position.y = -1;
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.listenToKeyEvents(window);
@@ -36,11 +38,13 @@ function initCart(canvas: HTMLCanvasElement) {
 
   const directionLight = new THREE.DirectionalLight(0xffffff, 3);
   directionLight.castShadow = true;
-  directionLight.position.set(2, 10, 2);
+  directionLight.shadow.mapSize.width = 4096;
+  directionLight.shadow.mapSize.height = 4096;
+
+  directionLight.position.set(2, 18, 2);
   scene.add(directionLight);
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-  ambientLight.castShadow = true;
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
   scene.add(ambientLight);
 
   //
@@ -51,6 +55,36 @@ function initCart(canvas: HTMLCanvasElement) {
   const grassGroup = new THREE.Group();
   const loader = new GLTFLoader();
 
+  // Foliage material generator
+
+  function getGhilbiMaterial(
+    colorGradient: THREE.Color[],
+    brightnessThreshold: number[],
+    lightPosition?: THREE.Vector3,
+    repeatPattern: boolean = false
+  ) {
+    return new THREE.ShaderMaterial({
+      vertexShader: vertex,
+      fragmentShader: fragment,
+      side: THREE.DoubleSide,
+      uniforms: {
+        uColorGradient: {
+          value: colorGradient,
+        },
+        uBrightnessThresholds: {
+          value: brightnessThreshold,
+        },
+        uLightPosition: {
+          value:
+            lightPosition ?? new THREE.Vector3().copy(directionLight.position),
+        },
+        uRepeatPattern: {
+          value: repeatPattern,
+        },
+      },
+    });
+  }
+
   //
   // GRASS MODEL
   //
@@ -58,36 +92,21 @@ function initCart(canvas: HTMLCanvasElement) {
   loader.load("/PodcoavaVerde/Grass.glb", function (obj) {
     obj.scene.traverse((mesh) => {
       if (mesh.name === "Foliage") {
-        mesh.material = new THREE.ShaderMaterial({
-          vertexShader: vertex,
-          fragmentShader: fragment,
-          side: THREE.DoubleSide,
-          uniforms: {
-            uColorGradient: {
-              value: [
-                new THREE.Color("#41980a").convertLinearToSRGB(),
-                new THREE.Color("#268b07").convertLinearToSRGB(),
-                new THREE.Color("#117c13").convertLinearToSRGB(),
-                new THREE.Color("#136d15").convertLinearToSRGB(),
-              ],
-            },
-            uBrightnessThresholds: {
-              value: [0.8, 0.3, 0],
-            },
-            uLightPosition: {
-              value: new THREE.Vector3().copy(directionLight.position),
-            },
-          },
-        });
+        (mesh as THREE.Mesh).material = getGhilbiMaterial(
+          [
+            new THREE.Color("#268b07").convertLinearToSRGB(),
+            new THREE.Color("#138510").convertLinearToSRGB(),
+            new THREE.Color("#117c13").convertLinearToSRGB(),
+            new THREE.Color("#136d15").convertLinearToSRGB(),
+          ],
+          [0.8, 0.55, 0.3]
+        );
+        mesh.receiveShadow = true;
       }
       if (mesh.name === "Grass") {
-        mesh.material = new THREE.MeshBasicMaterial({
+        (mesh as THREE.Mesh).material = new THREE.MeshBasicMaterial({
           color: "#136d15",
         });
-      }
-
-      if (mesh.name === "Dirt") {
-        mesh.material = new THREE.MeshBasicMaterial({ color: "#5c463e" });
       }
     });
     grassGroup.add(obj.scene);
@@ -99,15 +118,14 @@ function initCart(canvas: HTMLCanvasElement) {
 
   loader.load("/PodcoavaVerde/Cart.glb", function (obj) {
     obj.scene.traverse((mesh) => {
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
       if (mesh.type === "Mesh") {
-        mesh.material.roughness = 1;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        (mesh as THREE.Mesh).material.side = THREE.FrontSide;
+        (mesh as THREE.Mesh).material.roughness = 1;
       }
     });
-    obj.scene.castShadow = true;
-    obj.scene.receiveShadow = true;
-    obj.scene.position.set(-1, 1.35, -1);
+    obj.scene.position.set(0, 1.35, 0);
     obj.scene.rotation.y = (Math.PI * -45) / 180;
     sceneGroup.add(obj.scene);
   });
@@ -128,43 +146,65 @@ function initCart(canvas: HTMLCanvasElement) {
   // BUSH MODEL
   //
 
+  const bushGroup = new THREE.Group();
   loader.load("/PodcoavaVerde/Bush.glb", function (obj) {
     obj.scene.traverse((mesh) => {
-      if (mesh.isMesh) {
-        mesh.material = new THREE.ShaderMaterial({
-          vertexShader: vertex,
-          fragmentShader: fragment,
-          side: THREE.DoubleSide,
-          uniforms: {
-            uColorGradient: {
-              value: [
-                new THREE.Color("#268b07").convertLinearToSRGB(),
-                new THREE.Color("#138510").convertLinearToSRGB(),
-                new THREE.Color("#117c13").convertLinearToSRGB(),
-                new THREE.Color("#136d15").convertLinearToSRGB(),
-              ],
-            },
-            uBrightnessThresholds: {
-              value: [0.95, 0.55, 0.3],
-            },
-            uLightPosition: {
-              value: new THREE.Vector3().copy(directionLight.position),
-            },
-          },
-        });
-      }
+      (mesh as THREE.Mesh).material = getGhilbiMaterial(
+        [
+          new THREE.Color("#268b07").convertLinearToSRGB(),
+          new THREE.Color("#138510").convertLinearToSRGB(),
+          new THREE.Color("#117c13").convertLinearToSRGB(),
+          new THREE.Color("#136d15").convertLinearToSRGB(),
+        ],
+        [0.95, 0.55, 0.3]
+      );
     });
     obj.scene.position.set(3.5, 0.25, -0.5);
     obj.scene.scale.setScalar(0.4);
-    sceneGroup.add(obj.scene);
+    bushGroup.add(obj.scene);
+  });
+
+  //
+  // TREE
+  //
+
+  const treeGroup = new THREE.Group();
+
+  loader.load("/PodcoavaVerde/Tree.glb", function (obj) {
+    obj.scene.name = "Tree";
+    obj.scene.traverse((mesh) => {
+      if (mesh.name.includes("Leaves")) {
+        (mesh as THREE.Mesh).material = getGhilbiMaterial(
+          [
+            new THREE.Color("#268b07").convertLinearToSRGB(),
+            new THREE.Color("#138510").convertLinearToSRGB(),
+            new THREE.Color("#117c13").convertLinearToSRGB(),
+            new THREE.Color("#136d15").convertLinearToSRGB(),
+          ],
+          [0.9, 0.7, 0.5, 0.3, 0.1, 0.01],
+          new THREE.Vector3(-3, 9.5, -0.5),
+          true
+        );
+      }
+      if (mesh.type === "Mesh") {
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        (mesh as THREE.Mesh).material.side = THREE.FrontSide;
+      }
+    });
+
+    obj.scene.position.set(-3.5, 0, 0.5);
+
+    treeGroup.add(obj.scene);
   });
 
   //
   // FLOWERS
   //
 
-  const numberOfFlowers = 25;
+  const numberOfFlowers = 50;
 
+  const flowerGroup = new THREE.Group();
   const flowerColors = ["#e15b64", "#ffdddd", "#add8e6"];
 
   const flowerGeometry = new THREE.TetrahedronGeometry(0.035);
@@ -188,7 +228,7 @@ function initCart(canvas: HTMLCanvasElement) {
       0.48,
       (Math.sin(positionX) + Math.cos(positionY)) * 2.25
     );
-    sceneGroup.add(flower);
+    flowerGroup.add(flower);
   }
 
   //
@@ -202,18 +242,19 @@ function initCart(canvas: HTMLCanvasElement) {
   rock.position.set(-1.5, 0.25, 3);
   sceneGroup.add(rock);
 
-  scene.add(sceneGroup, grassGroup);
+  scene.add(sceneGroup, grassGroup, flowerGroup, treeGroup, bushGroup);
 
   const clock = new THREE.Clock();
 
   const animate = () => {
     controls.update();
 
-    // if (mixer) {
-    //   mixer.update(clock.getDelta() * 0.75);
-    // }
-
     grassGroup.rotation.y = Math.sin(clock.getElapsedTime()) * 0.025;
+    treeGroup.rotation.x = Math.cos(clock.getElapsedTime()) * 0.015;
+    bushGroup.rotation.x = Math.cos(clock.getElapsedTime()) * 0.025;
+
+    directionLight.position.x = Math.cos(clock.getElapsedTime()) * 0.5;
+    directionLight.position.z = Math.sin(clock.getElapsedTime()) * 0.5;
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
@@ -239,11 +280,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <h1 class="absolute text-3xl top-2 left-2">Cart</h1>
+  <!-- <h1 class="absolute text-3xl top-2 left-2">Cart</h1>
   <router-link
     to="/"
     class="absolute text-3xl hover:underline h-max top-2 right-2"
     >Back</router-link
-  >
+  > -->
   <canvas ref="canvas" class="w-screen h-screen"></canvas>
 </template>
