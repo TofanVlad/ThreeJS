@@ -2,9 +2,8 @@
 import { ref, Ref, onMounted } from "vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import vertex from "../../shaders/Foliage/vertex.glsl";
-import fragment from "../../shaders/Foliage/fragment.glsl";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import { getGhilbiMaterial } from "./helper";
 
 const canvas: Ref<HTMLCanvasElement | null> = ref(null);
 
@@ -55,36 +54,6 @@ function initCart(canvas: HTMLCanvasElement) {
   const grassGroup = new THREE.Group();
   const loader = new GLTFLoader();
 
-  // Foliage material generator
-
-  function getGhilbiMaterial(
-    colorGradient: THREE.Color[],
-    brightnessThreshold: number[],
-    lightPosition?: THREE.Vector3,
-    repeatPattern: boolean = false
-  ) {
-    return new THREE.ShaderMaterial({
-      vertexShader: vertex,
-      fragmentShader: fragment,
-      side: THREE.DoubleSide,
-      uniforms: {
-        uColorGradient: {
-          value: colorGradient,
-        },
-        uBrightnessThresholds: {
-          value: brightnessThreshold,
-        },
-        uLightPosition: {
-          value:
-            lightPosition ?? new THREE.Vector3().copy(directionLight.position),
-        },
-        uRepeatPattern: {
-          value: repeatPattern,
-        },
-      },
-    });
-  }
-
   //
   // GRASS MODEL
   //
@@ -99,9 +68,9 @@ function initCart(canvas: HTMLCanvasElement) {
             new THREE.Color("#117c13").convertLinearToSRGB(),
             new THREE.Color("#136d15").convertLinearToSRGB(),
           ],
-          [0.8, 0.55, 0.3]
+          [0.8, 0.55, 0.3],
+          directionLight.position
         );
-        mesh.receiveShadow = true;
       }
       if (mesh.name === "Grass") {
         (mesh as THREE.Mesh).material = new THREE.MeshBasicMaterial({
@@ -156,46 +125,13 @@ function initCart(canvas: HTMLCanvasElement) {
           new THREE.Color("#117c13").convertLinearToSRGB(),
           new THREE.Color("#136d15").convertLinearToSRGB(),
         ],
-        [0.95, 0.55, 0.3]
+        [0.95, 0.55, 0.3],
+        directionLight.position
       );
     });
     obj.scene.position.set(3.5, 0.25, -0.5);
     obj.scene.scale.setScalar(0.4);
     bushGroup.add(obj.scene);
-  });
-
-  //
-  // TREE
-  //
-
-  const treeGroup = new THREE.Group();
-
-  loader.load("/PodcoavaVerde/Tree.glb", function (obj) {
-    obj.scene.name = "Tree";
-    obj.scene.traverse((mesh) => {
-      if (mesh.name.includes("Leaves")) {
-        (mesh as THREE.Mesh).material = getGhilbiMaterial(
-          [
-            new THREE.Color("#268b07").convertLinearToSRGB(),
-            new THREE.Color("#138510").convertLinearToSRGB(),
-            new THREE.Color("#117c13").convertLinearToSRGB(),
-            new THREE.Color("#136d15").convertLinearToSRGB(),
-          ],
-          [0.9, 0.7, 0.5, 0.3, 0.1, 0.01],
-          new THREE.Vector3(-3, 9.5, -0.5),
-          true
-        );
-      }
-      if (mesh.type === "Mesh") {
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        (mesh as THREE.Mesh).material.side = THREE.FrontSide;
-      }
-    });
-
-    obj.scene.position.set(-3.5, 0, 0.5);
-
-    treeGroup.add(obj.scene);
   });
 
   //
@@ -242,7 +178,7 @@ function initCart(canvas: HTMLCanvasElement) {
   rock.position.set(-1.5, 0.25, 3);
   sceneGroup.add(rock);
 
-  scene.add(sceneGroup, grassGroup, flowerGroup, treeGroup, bushGroup);
+  scene.add(sceneGroup, grassGroup, flowerGroup, bushGroup);
 
   const clock = new THREE.Clock();
 
@@ -250,7 +186,6 @@ function initCart(canvas: HTMLCanvasElement) {
     controls.update();
 
     grassGroup.rotation.y = Math.sin(clock.getElapsedTime()) * 0.025;
-    treeGroup.rotation.x = Math.cos(clock.getElapsedTime()) * 0.015;
     bushGroup.rotation.x = Math.cos(clock.getElapsedTime()) * 0.025;
 
     directionLight.position.x = Math.cos(clock.getElapsedTime()) * 0.5;
@@ -280,11 +215,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- <h1 class="absolute text-3xl top-2 left-2">Cart</h1>
+  <h1 class="absolute text-3xl top-2 left-2">Horse</h1>
   <router-link
     to="/"
     class="absolute text-3xl hover:underline h-max top-2 right-2"
     >Back</router-link
-  > -->
+  >
   <canvas ref="canvas" class="w-screen h-screen"></canvas>
 </template>

@@ -5,6 +5,7 @@ import { onMounted, ref, Ref } from "vue";
 import vertex from "../../shaders/Foliage/vertex.glsl";
 import fragment from "../../shaders/Foliage/fragment.glsl";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import { getGhilbiMaterial } from "./helper";
 
 const canvas: Ref<HTMLCanvasElement | null> = ref(null);
 
@@ -21,6 +22,7 @@ function initShaders(canvas: HTMLCanvasElement) {
 
   camera.position.set(-1, 4, 8);
   scene.add(camera);
+  scene.position.y = -1;
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -28,7 +30,6 @@ function initShaders(canvas: HTMLCanvasElement) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.listenToKeyEvents(window);
 
-  //   controls.minPolarAngle = (Math.PI * 40) / 180;
   controls.maxPolarAngle = (Math.PI * 75) / 180;
 
   //
@@ -36,7 +37,7 @@ function initShaders(canvas: HTMLCanvasElement) {
   //
 
   const directionLight = new THREE.DirectionalLight(0xffffff, 3);
-  directionLight.position.set(2, 10, 2);
+  directionLight.position.set(2, 18, 2);
   scene.add(directionLight);
 
   const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -63,36 +64,21 @@ function initShaders(canvas: HTMLCanvasElement) {
   loader.load("/PodcoavaVerde/Grass.glb", function (obj) {
     obj.scene.traverse((mesh) => {
       if (mesh.name === "Foliage") {
-        mesh.material = new THREE.ShaderMaterial({
-          vertexShader: vertex,
-          fragmentShader: fragment,
-          side: THREE.DoubleSide,
-          uniforms: {
-            uColorGradient: {
-              value: [
-                new THREE.Color("#41980a").convertLinearToSRGB(),
-                new THREE.Color("#268b07").convertLinearToSRGB(),
-                new THREE.Color("#117c13").convertLinearToSRGB(),
-                new THREE.Color("#136d15").convertLinearToSRGB(),
-              ],
-            },
-            uBrightnessThresholds: {
-              value: [0.8, 0.3, 0],
-            },
-            uLightPosition: {
-              value: new THREE.Vector3().copy(directionLight.position),
-            },
-          },
-        });
+        (mesh as THREE.Mesh).material = getGhilbiMaterial(
+          [
+            new THREE.Color("#268b07").convertLinearToSRGB(),
+            new THREE.Color("#138510").convertLinearToSRGB(),
+            new THREE.Color("#117c13").convertLinearToSRGB(),
+            new THREE.Color("#136d15").convertLinearToSRGB(),
+          ],
+          [0.8, 0.55, 0.3],
+          directionLight.position
+        );
       }
       if (mesh.name === "Grass") {
-        mesh.material = new THREE.MeshBasicMaterial({
+        (mesh as THREE.Mesh).material = new THREE.MeshBasicMaterial({
           color: "#136d15",
         });
-      }
-
-      if (mesh.name === "Dirt") {
-        mesh.material = new THREE.MeshBasicMaterial({ color: "#5c463e" });
       }
     });
     grassGroup.add(obj.scene);
@@ -128,6 +114,29 @@ function initShaders(canvas: HTMLCanvasElement) {
   });
 
   //
+  // BUSH
+  //
+
+  const bushGroup = new THREE.Group();
+  loader.load("/PodcoavaVerde/Bush.glb", function (obj) {
+    obj.scene.traverse((mesh) => {
+      (mesh as THREE.Mesh).material = getGhilbiMaterial(
+        [
+          new THREE.Color("#268b07").convertLinearToSRGB(),
+          new THREE.Color("#138510").convertLinearToSRGB(),
+          new THREE.Color("#117c13").convertLinearToSRGB(),
+          new THREE.Color("#136d15").convertLinearToSRGB(),
+        ],
+        [0.95, 0.55, 0.3],
+        directionLight.position
+      );
+    });
+    obj.scene.position.set(-3, 0.25, 1.5);
+    obj.scene.scale.setScalar(0.4);
+    bushGroup.add(obj.scene, new THREE.AxesHelper(10));
+  });
+
+  //
   // ROCK MESHES
   //
 
@@ -143,7 +152,7 @@ function initShaders(canvas: HTMLCanvasElement) {
   clusterRock2.rotation.y = (Math.PI * 65) / 180;
   sceneGroup.add(clusterRock1, clusterRock2, frontRock);
 
-  scene.add(sceneGroup, grassGroup);
+  scene.add(sceneGroup, grassGroup, bushGroup);
 
   //
   // ANIMATION
