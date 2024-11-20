@@ -2,10 +2,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { onMounted, ref, Ref } from "vue";
-import vertex from "../../shaders/Foliage/vertex.glsl";
-import fragment from "../../shaders/Foliage/fragment.glsl";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
-import { getGhilbiMaterial } from "./helper";
+import { getGhilbiMaterial, getFlowers } from "./helper";
 
 const canvas: Ref<HTMLCanvasElement | null> = ref(null);
 
@@ -49,6 +47,12 @@ function initShaders(canvas: HTMLCanvasElement) {
 
   const sceneGroup = new THREE.Group();
   const grassGroup = new THREE.Group();
+
+  //
+  // FLOWERS
+  //
+
+  scene.add(getFlowers(50));
 
   //
   // MODEL + ANIMATION LOADER
@@ -131,9 +135,9 @@ function initShaders(canvas: HTMLCanvasElement) {
         directionLight.position
       );
     });
-    obj.scene.position.set(-3, 0.25, 1.5);
+    obj.scene.position.set(-3.25, 0.25, 0.5);
     obj.scene.scale.setScalar(0.4);
-    bushGroup.add(obj.scene, new THREE.AxesHelper(10));
+    bushGroup.add(obj.scene);
   });
 
   //
@@ -167,6 +171,9 @@ function initShaders(canvas: HTMLCanvasElement) {
     }
 
     grassGroup.rotation.y = Math.sin(clock.getElapsedTime()) * 0.025;
+
+    directionLight.position.x = Math.cos(clock.getElapsedTime() * 0.5) * 0.5;
+    directionLight.position.z = Math.sin(clock.getElapsedTime() * 0.5) * 0.5;
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);

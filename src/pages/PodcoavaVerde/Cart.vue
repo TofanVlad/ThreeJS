@@ -3,7 +3,7 @@ import { ref, Ref, onMounted } from "vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
-import { getGhilbiMaterial } from "./helper";
+import { getGhilbiMaterial, getFlowers } from "./helper";
 
 const canvas: Ref<HTMLCanvasElement | null> = ref(null);
 
@@ -138,34 +138,7 @@ function initCart(canvas: HTMLCanvasElement) {
   // FLOWERS
   //
 
-  const numberOfFlowers = 50;
-
-  const flowerGroup = new THREE.Group();
-  const flowerColors = ["#e15b64", "#ffdddd", "#add8e6"];
-
-  const flowerGeometry = new THREE.TetrahedronGeometry(0.035);
-
-  for (let i = 0; i < numberOfFlowers; i++) {
-    const flowerMaterial = new THREE.MeshBasicMaterial();
-
-    const positionX = (Math.random() - 0.5) * 8;
-    const positionY = (Math.random() - 0.5) * 8;
-
-    const flowerRotation = Math.random() * 90;
-    const flowerColor = Math.floor(Math.random() * 3);
-
-    const flower = new THREE.Mesh(flowerGeometry, flowerMaterial);
-
-    flower.material.color = new THREE.Color(flowerColors[flowerColor]);
-
-    flower.rotation.x = flowerRotation;
-    flower.position.set(
-      (Math.cos(positionX) + Math.sin(positionY)) * 2.25,
-      0.48,
-      (Math.sin(positionX) + Math.cos(positionY)) * 2.25
-    );
-    flowerGroup.add(flower);
-  }
+  scene.add(getFlowers(50));
 
   //
   // ROCK
@@ -178,7 +151,7 @@ function initCart(canvas: HTMLCanvasElement) {
   rock.position.set(-1.5, 0.25, 3);
   sceneGroup.add(rock);
 
-  scene.add(sceneGroup, grassGroup, flowerGroup, bushGroup);
+  scene.add(sceneGroup, grassGroup, bushGroup);
 
   const clock = new THREE.Clock();
 
@@ -188,8 +161,8 @@ function initCart(canvas: HTMLCanvasElement) {
     grassGroup.rotation.y = Math.sin(clock.getElapsedTime()) * 0.025;
     bushGroup.rotation.x = Math.cos(clock.getElapsedTime()) * 0.025;
 
-    directionLight.position.x = Math.cos(clock.getElapsedTime()) * 0.5;
-    directionLight.position.z = Math.sin(clock.getElapsedTime()) * 0.5;
+    directionLight.position.x = Math.cos(clock.getElapsedTime() * 0.5) * 0.5;
+    directionLight.position.z = Math.sin(clock.getElapsedTime() * 0.5) * 0.5;
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);

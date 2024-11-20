@@ -2,8 +2,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { onMounted, ref, Ref } from "vue";
-import vertex from "../shaders/Foliage/vertex.glsl";
-import fragment from "../shaders/Foliage/fragment.glsl";
+import foliageVertex from "../shaders/Foliage/foliageVertex.glsl";
+import folaigeFragment from "../shaders/Foliage/folaigeFragment.glsl";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 
 const canvas: Ref<HTMLCanvasElement | null> = ref(null);
@@ -45,12 +45,12 @@ function initShaders(canvas: HTMLCanvasElement) {
 
   const loader = new GLTFLoader();
 
-  loader.load("/Shaders/Foliage.glb", function (obj) {
+  loader.load("/PodcoavaVerde/Bush.glb", function (obj) {
     obj.scene.traverse((mesh) => {
       if (mesh.name === "Foliage") {
         mesh.material = new THREE.ShaderMaterial({
-          vertexShader: vertex,
-          fragmentShader: fragment,
+          vertexShader: foliageVertex,
+          fragmentShader: folaigeFragment,
           side: THREE.DoubleSide,
           uniforms: {
             uColorGradient: {
@@ -65,7 +65,10 @@ function initShaders(canvas: HTMLCanvasElement) {
               value: [0.9, 0.45, 0.001],
             },
             uLightPosition: {
-              value: new THREE.Vector3().copy(directionLight.position),
+              value: directionLight.position,
+            },
+            uRepeatPattern: {
+              value: false,
             },
           },
         });

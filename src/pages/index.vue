@@ -21,6 +21,7 @@ import myButton from "../components/my-button.vue";
     <div class="flex flex-wrap justify-center gap-4 mt-4">
       <my-button text="Horse" to="/podcoava-horse" />
       <my-button text="Cart" to="/podcoava-cart" />
+      <my-button text="Boat" to="/podcoava-boat" />
     </div>
   </section>
   <my-bubbles />
