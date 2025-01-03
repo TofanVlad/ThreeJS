@@ -15,6 +15,7 @@ const routes = [
     { path: '/podcoava-horse', component: () => import('./pages/PodcoavaVerde/Horse.vue') },
     { path: '/podcoava-cart', component: () => import('./pages/PodcoavaVerde/Cart.vue') },
     { path: '/podcoava-boat', component: () => import('./pages/PodcoavaVerde/Boat.vue') },
+    { path: '/podcoava-atv', component: () => import('./pages/PodcoavaVerde/ATV.vue') },
 ]
 
 const router = createRouter({

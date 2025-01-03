@@ -22,6 +22,7 @@ import myButton from "../components/my-button.vue";
       <my-button text="Horse" to="/podcoava-horse" />
       <my-button text="Cart" to="/podcoava-cart" />
       <my-button text="Boat" to="/podcoava-boat" />
+      <my-button text="ATV" to="/podcoava-atv" />
     </div>
   </section>
   <my-bubbles />
